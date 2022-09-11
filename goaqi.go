@@ -62,16 +62,16 @@ var (
 //
 // Please note that the truncation step is not performed in this function
 func AQIPM25(avg float64) (int64, error) {
-	return AQI(avg, PM25Breakpoints)
+	return aqi(avg, PM25Breakpoints)
 }
 
-// AQI calculates the AQI for a given set of breakpoints
+// aqi calculates the AQI for a given set of breakpoints
 //
 // Requires a 24 hour average of concentration in µg/m3 and a set of breakpoints
-func AQI(avg float64, breakpoints []Breakpoint) (int64, error) {
+func aqi(avg float64, breakpoints []Breakpoint) (int64, error) {
 	for i, bp := range breakpoints {
 		if avg >= bp.Low && avg <= bp.High {
-			return AQIForBreakpoint(avg, bp, AQIBreakpoints[i])
+			return aqiForBreakpoint(avg, bp, AQIBreakpoints[i])
 		}
 	}
 	return 0, ErrBeyondTheScale
@@ -80,7 +80,7 @@ func AQI(avg float64, breakpoints []Breakpoint) (int64, error) {
 // AQIForBreakpoint calculates the AQI from the two breakpoints and the average concentration
 //
 // Requires the average concentration, the breakpoint for the average concentration, and the AQI breakpoint
-func AQIForBreakpoint(avg float64, bp Breakpoint, aqiBP Breakpoint) (int64, error) {
+func aqiForBreakpoint(avg float64, bp Breakpoint, aqiBP Breakpoint) (int64, error) {
 	return int64(math.Round((aqiBP.High-aqiBP.Low)/(bp.High-bp.Low)*(avg-bp.Low) + aqiBP.Low)), nil
 }
 
