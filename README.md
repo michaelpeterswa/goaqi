@@ -7,6 +7,7 @@
 	</strong>
 </p>
 <p align="center">
+<img src="https://user-images.githubusercontent.com/13633516/189512731-21455167-7f07-4926-9dd5-3d8f92e83f78.svg">
 </p>
 
 ## Meta
