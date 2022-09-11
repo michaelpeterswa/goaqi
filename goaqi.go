@@ -23,13 +23,13 @@ var (
 	}
 	// PM10Breakpoints are the breakpoints for PM10 in µg/m3
 	PM100Breakpoints = []Breakpoint{
-		{0, 54.9},      // Good
-		{55.0, 154.9},  // Moderate
-		{155.0, 254.9}, // Unhealthy for Sensitive Groups
-		{255.0, 354.9}, // Unhealthy
-		{355.0, 424.9}, // Very Unhealthy
-		{425.0, 504.9}, // Hazardous
-		{505.0, 604.9}, // Hazardous
+		{0, 54},    // Good
+		{55, 154},  // Moderate
+		{155, 254}, // Unhealthy for Sensitive Groups
+		{255, 354}, // Unhealthy
+		{355, 424}, // Very Unhealthy
+		{425, 504}, // Hazardous
+		{505, 604}, // Hazardous
 	}
 	// AQIBreakpoints are the breakpoints for AQI
 	AQIBreakpoints = []Breakpoint{
@@ -63,6 +63,13 @@ var (
 // Please note that the truncation step is not performed in this function
 func AQIPM25(avg float64) (int64, error) {
 	return aqi(avg, PM25Breakpoints)
+}
+
+// AQIPM100 calculates the AQI for PM10.0
+//
+// Requires a 24 hour average of PM10.0 concentration in µg/m3
+func AQIPM100(avg float64) (int64, error) {
+	return aqi(math.Trunc(avg), PM100Breakpoints)
 }
 
 // aqi calculates the AQI for a given set of breakpoints

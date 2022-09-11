@@ -86,6 +86,85 @@ func TestPM25AQICalculationError(t *testing.T) {
 	}
 }
 
+func TestPM100AQICalculation(t *testing.T) {
+	tests := []struct {
+		Name        string
+		Average     float64
+		ExpectedAQI int64
+	}{
+		{
+			Name:        "Good",
+			Average:     50.4,
+			ExpectedAQI: 46,
+		},
+		{
+			Name:        "Moderate",
+			Average:     85.2,
+			ExpectedAQI: 66,
+		},
+		{
+			Name:        "Unhealthy for Sensitive Groups",
+			Average:     174.0,
+			ExpectedAQI: 110,
+		},
+		{
+			Name:        "Unhealthy",
+			Average:     274.3,
+			ExpectedAQI: 160,
+		},
+		{
+			Name:        "Very Unhealthy",
+			Average:     371.2,
+			ExpectedAQI: 224,
+		},
+		{
+			Name:        "Hazardous 1",
+			Average:     490.3,
+			ExpectedAQI: 382,
+		},
+		{
+			Name:        "Hazardous 2",
+			Average:     557.8,
+			ExpectedAQI: 453,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.Name, func(t *testing.T) {
+			result, err := goaqi.AQIPM100(tc.Average)
+			if err != nil {
+				assert.Fail(t, err.Error())
+			}
+			assert.Equal(t, tc.ExpectedAQI, result)
+		})
+	}
+}
+
+func TestPM100AQICalculationError(t *testing.T) {
+	tests := []struct {
+		Name    string
+		Average float64
+	}{
+		{
+			Name:    "Negative",
+			Average: -10.5,
+		},
+		{
+			Name:    "Super Hazardous",
+			Average: 1000.5,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.Name, func(t *testing.T) {
+			_, err := goaqi.AQIPM100(tc.Average)
+			if assert.Error(t, err) {
+				assert.Equal(t, "beyond the scale", err.Error())
+			}
+		})
+	}
+}
+
 func TestAQIDesignationFromIndex(t *testing.T) {
 	tests := []struct {
 		Name                   string
