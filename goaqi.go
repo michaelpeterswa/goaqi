@@ -1,3 +1,6 @@
+// Package goaqi computes the US EPA Air Quality Index (AQI) from pollutant
+// concentrations, following the AirNow Technical Assistance Document for the
+// Reporting of Daily Air Quality (September 2018).
 package goaqi
 
 import (
@@ -5,13 +8,14 @@ import (
 	"math"
 )
 
+// Breakpoint is one inclusive [Low, High] band of a pollutant or AQI scale.
 type Breakpoint struct {
 	Low  float64
 	High float64
 }
 
 var (
-	// PM25Breakpoints are the breakpoints for PM2.5 in µg/m3
+	// PM25Breakpoints are the breakpoints for PM2.5 in µg/m3.
 	PM25Breakpoints = []Breakpoint{
 		{0, 12.0},      // Good
 		{12.1, 35.4},   // Moderate
@@ -21,7 +25,8 @@ var (
 		{250.5, 350.4}, // Hazardous
 		{350.5, 500.4}, // Hazardous
 	}
-	// PM10Breakpoints are the breakpoints for PM10 in µg/m3
+
+	// PM100Breakpoints are the breakpoints for PM10 in µg/m3.
 	PM100Breakpoints = []Breakpoint{
 		{0, 54},    // Good
 		{55, 154},  // Moderate
@@ -31,7 +36,8 @@ var (
 		{425, 504}, // Hazardous
 		{505, 604}, // Hazardous
 	}
-	// AQIBreakpoints are the breakpoints for AQI
+
+	// AQIBreakpoints are the breakpoints of the AQI scale itself.
 	AQIBreakpoints = []Breakpoint{
 		{0, 50},    // Good
 		{51, 100},  // Moderate
@@ -42,7 +48,7 @@ var (
 		{401, 500}, // Hazardous
 	}
 
-	// AQI Name Designations
+	// AQIDesignations are the category names, indexed in step with AQIBreakpoints.
 	AQIDesignations = []string{
 		"Good",
 		"Moderate",
@@ -53,44 +59,30 @@ var (
 		"Hazardous",
 	}
 
+	// ErrBeyondTheScale is returned when a concentration or index falls outside
+	// every defined breakpoint, including negative values.
 	ErrBeyondTheScale = errors.New("beyond the scale")
 )
 
-// AQIPM25 calculates the AQI for PM2.5
+// AQIPM25 calculates the AQI for PM2.5.
 //
-// Requires a 24 hour average of PM2.5 concentration in µg/m3
+// Requires a 24 hour average of PM2.5 concentration in µg/m3.
 //
-// Please note that the truncation step is not performed in this function
+// Please note that the truncation step is not performed in this function.
 func AQIPM25(avg float64) (int64, error) {
 	return aqi(avg, PM25Breakpoints)
 }
 
-// AQIPM100 calculates the AQI for PM10.0
+// AQIPM100 calculates the AQI for PM10.0.
 //
-// Requires a 24 hour average of PM10.0 concentration in µg/m3
+// Requires a 24 hour average of PM10.0 concentration in µg/m3. The
+// concentration is truncated to an integer before lookup, as the document
+// specifies for PM10.
 func AQIPM100(avg float64) (int64, error) {
 	return aqi(math.Trunc(avg), PM100Breakpoints)
 }
 
-// aqi calculates the AQI for a given set of breakpoints
-//
-// Requires a 24 hour average of concentration in µg/m3 and a set of breakpoints
-func aqi(avg float64, breakpoints []Breakpoint) (int64, error) {
-	for i, bp := range breakpoints {
-		if avg >= bp.Low && avg <= bp.High {
-			return aqiForBreakpoint(avg, bp, AQIBreakpoints[i])
-		}
-	}
-	return 0, ErrBeyondTheScale
-}
-
-// AQIForBreakpoint calculates the AQI from the two breakpoints and the average concentration
-//
-// Requires the average concentration, the breakpoint for the average concentration, and the AQI breakpoint
-func aqiForBreakpoint(avg float64, bp Breakpoint, aqiBP Breakpoint) (int64, error) {
-	return int64(math.Round((aqiBP.High-aqiBP.Low)/(bp.High-bp.Low)*(avg-bp.Low) + aqiBP.Low)), nil
-}
-
+// AQIDesignationFromIndex returns the category name for an AQI value.
 func AQIDesignationFromIndex(aqi int64) (string, error) {
 	for i, bp := range AQIBreakpoints {
 		if aqi >= int64(bp.Low) && aqi <= int64(bp.High) {
@@ -98,4 +90,20 @@ func AQIDesignationFromIndex(aqi int64) (string, error) {
 		}
 	}
 	return "", ErrBeyondTheScale
+}
+
+// aqi calculates the AQI for a concentration against a set of breakpoints.
+func aqi(avg float64, breakpoints []Breakpoint) (int64, error) {
+	for i, bp := range breakpoints {
+		if avg >= bp.Low && avg <= bp.High {
+			return aqiForBreakpoint(avg, bp, AQIBreakpoints[i]), nil
+		}
+	}
+	return 0, ErrBeyondTheScale
+}
+
+// aqiForBreakpoint linearly interpolates the concentration's position within
+// its pollutant breakpoint onto the matching AQI breakpoint.
+func aqiForBreakpoint(avg float64, bp Breakpoint, aqiBP Breakpoint) int64 {
+	return int64(math.Round((aqiBP.High-aqiBP.Low)/(bp.High-bp.Low)*(avg-bp.Low) + aqiBP.Low))
 }

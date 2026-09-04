@@ -3,8 +3,9 @@ package goaqi_test
 import (
 	"testing"
 
-	"676f.dev/goaqi"
+	"github.com/michaelpeterswa/goaqi"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPM25AQICalculation(t *testing.T) {
@@ -53,9 +54,7 @@ func TestPM25AQICalculation(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.Name, func(t *testing.T) {
 			result, err := goaqi.AQIPM25(tc.Average)
-			if err != nil {
-				assert.Fail(t, err.Error())
-			}
+			require.NoError(t, err)
 			assert.Equal(t, tc.ExpectedAQI, result)
 		})
 	}
@@ -79,9 +78,7 @@ func TestPM25AQICalculationError(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.Name, func(t *testing.T) {
 			_, err := goaqi.AQIPM25(tc.Average)
-			if assert.Error(t, err) {
-				assert.Equal(t, "beyond the scale", err.Error())
-			}
+			assert.ErrorIs(t, err, goaqi.ErrBeyondTheScale)
 		})
 	}
 }
@@ -132,9 +129,7 @@ func TestPM100AQICalculation(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.Name, func(t *testing.T) {
 			result, err := goaqi.AQIPM100(tc.Average)
-			if err != nil {
-				assert.Fail(t, err.Error())
-			}
+			require.NoError(t, err)
 			assert.Equal(t, tc.ExpectedAQI, result)
 		})
 	}
@@ -158,9 +153,7 @@ func TestPM100AQICalculationError(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.Name, func(t *testing.T) {
 			_, err := goaqi.AQIPM100(tc.Average)
-			if assert.Error(t, err) {
-				assert.Equal(t, "beyond the scale", err.Error())
-			}
+			assert.ErrorIs(t, err, goaqi.ErrBeyondTheScale)
 		})
 	}
 }
@@ -211,9 +204,7 @@ func TestAQIDesignationFromIndex(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.Name, func(t *testing.T) {
 			result, err := goaqi.AQIDesignationFromIndex(tc.Index)
-			if err != nil {
-				assert.Fail(t, err.Error())
-			}
+			require.NoError(t, err)
 			assert.Equal(t, tc.ExpectedAQIDesignation, result)
 		})
 	}
@@ -237,9 +228,7 @@ func TestAQIDesignationFromIndexError(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.Name, func(t *testing.T) {
 			_, err := goaqi.AQIDesignationFromIndex(tc.Index)
-			if assert.Error(t, err) {
-				assert.Equal(t, "beyond the scale", err.Error())
-			}
+			assert.ErrorIs(t, err, goaqi.ErrBeyondTheScale)
 		})
 	}
 }
